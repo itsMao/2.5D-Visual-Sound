@@ -41,3 +41,4 @@ class TrainOptions(BaseOptions):
 		self.mode = "train"
 		self.isTrain = True
 		self.enable_data_augmentation = True
+

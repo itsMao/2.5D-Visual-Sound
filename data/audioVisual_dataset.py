@@ -71,7 +71,9 @@ class AudioVisualDataset(BaseDataset):
 
         #randomly get a start time for the audio segment from the 10s clip
         audio_start_time = random.uniform(0, 9.9 - self.opt.audio_length)
+        print('audio_start_time:', audio_start_time)
         audio_end_time = audio_start_time + self.opt.audio_length
+        print('audio_end_time:', audio_end_time)
         audio_start = int(audio_start_time * self.opt.audio_sampling_rate)
         audio_end = audio_start + int(self.opt.audio_length * self.opt.audio_sampling_rate)
         audio = audio[:, audio_start:audio_end]
@@ -80,14 +82,20 @@ class AudioVisualDataset(BaseDataset):
         audio_channel2 = audio[1,:]
 
         #get the frame dir path based on audio path
-        path_parts = self.audios[index].strip().split('/')
+        print(self.audios[index])
+        path_parts = self.audios[index].decode('utf-8').strip().split('/')
+        print(path_parts)
         path_parts[-1] = path_parts[-1][:-4] + '.mp4'
-        path_parts[-2] = 'frames'
-        frame_path = '/'.join(path_parts)
+        path_parts[-2] = 'videos'
 
+        frame_path = '/'.join(path_parts)
+        print('frame_path:', path_parts)
+        print('frame_path:', frame_path)
         # get the closest frame to the audio segment
         #frame_index = int(round((audio_start_time + audio_end_time) / 2.0 + 0.5))  #1 frame extracted per second
         frame_index = int(round(((audio_start_time + audio_end_time) / 2.0 + 0.05) * 10))  #10 frames extracted per second
+        print('frame_index:',frame_index)
+        print(str(frame_index).zfill(6))
         frame = process_image(Image.open(os.path.join(frame_path, str(frame_index).zfill(6) + '.png')).convert('RGB'), self.opt.enable_data_augmentation)
         frame = self.vision_transform(frame)
 
