@@ -3,7 +3,8 @@ import cv2 as cv
 
 root_dir = "E://mono2binaural_data/"
 videos_dir = os.path.join(root_dir, "videos")
-frames_dir = os.path.join(root_dir, "frames")
+#frames_dir = os.path.join(root_dir, "frames")
+frames_dir ="G://frames/"
 if not os.path.exists(frames_dir):
     os.mkdir(frames_dir)
 for video in os.listdir(videos_dir):
