@@ -13,7 +13,7 @@ from torch import optim
 import torch.nn.functional as F
 from . import networks,criterion
 from torch.autograd import Variable
-
+import torchsnooper
 class AudioVisualModel(torch.nn.Module):
     def name(self):
         return 'AudioVisualModel'

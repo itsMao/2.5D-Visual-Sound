@@ -7,13 +7,16 @@
 # LICENSE file in the root directory of this source tree.
 
 import os
+os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 import time
 import torch
+torch.cuda.current_device()
 from options.train_options import TrainOptions
 from data.data_loader import CreateDataLoader
 from models.models import ModelBuilder
 from models.audioVisual_model import AudioVisualModel
 from torch.autograd import Variable
+#from torch.utils.tensorboard import SummaryWriter
 from tensorboardX import SummaryWriter
 
 def create_optimizer(nets, opt):
@@ -46,7 +49,7 @@ def display_val(model, loss_criterion, writer, index, dataset_val, opt):
     print('val loss: %.3f' % avg_loss)
     return avg_loss 
 
-#python train.py --hdf5FolderPath E://mono2binaural_data/splits/split1 --name mono2binaural --model audioVisual --save_epoch_freq 50 --display_freq 10 --save_latest_freq 100 --batchSize 128 --learning_rate_decrease_itr 10 --niter 1000 --lr_visual 0.0001 --lr_audio 0.001 --nThreads 1 --gpu_ids 0 --validation_on --validation_freq 100 --validation_batches 50 --tensorboard True
+#python train.py --hdf5FolderPath E://mono2binaural_data/splits/split0126 --name mono2binaural --model audioVisual --save_epoch_freq 50 --display_freq 10 --save_latest_freq 100 --batchSize 32 --learning_rate_decrease_itr 10 --niter 100 --lr_visual 0.0001 --lr_audio 0.001 --nThreads 1 --gpu_ids 0 --validation_on --validation_freq 100 --validation_batches 50 --tensorboard True
 
 if __name__ == '__main__':
     #parse arguments
@@ -70,7 +73,7 @@ if __name__ == '__main__':
         opt.mode = 'train' #set it back
 
     if opt.tensorboard:
-        from tensorboardX import SummaryWriter
+        #from tensorboardX import SummaryWriter
         writer = SummaryWriter(comment=opt.name)
     else:
         writer = None
@@ -86,14 +89,15 @@ if __name__ == '__main__':
     nets = (net_visual, net_audio)
 
     # construct our audio-visual model
-
     model = AudioVisualModel(nets, opt)
     # 多卡并行计算
-    #model = torch.nn.DataParallel(model, device_ids=opt.gpu_ids)
+    model = torch.nn.DataParallel(model, device_ids=opt.gpu_ids)
     model.to(opt.device)
+    print("model is created")
 
     # set up optimizer
     optimizer = create_optimizer(nets, opt)
+    print("optimizer ", opt.optimizer, " is created")
 
     # set up loss function
     loss_criterion = torch.nn.MSELoss()
@@ -116,23 +120,20 @@ if __name__ == '__main__':
         if(opt.measure_time):
             iter_start_time = time.time()
             print(iter_start_time)
-        print(dataset)
 
         for i, data in enumerate(dataset):
-            print(dataset)
             if(opt.measure_time):
                 torch.cuda.synchronize()
                 iter_data_loaded_time = time.time()
 
             total_steps += opt.batchSize
-            print(total_steps)
+            #print("total steps:", total_steps)
 
             # forward pass
             model.zero_grad()
             output = model.forward(data)
 
             # compute loss
-            print("compute loss...")
             loss = loss_criterion(output['binaural_spectrogram'], Variable(output['audio_gt'], requires_grad=False))
             batch_loss.append(loss.item())
 
